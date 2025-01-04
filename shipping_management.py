@@ -100,8 +100,11 @@ def make_order(username):
 
 
 def check_order(username):
-    """View Order"""
+    """View Order with Delivery Status"""
     user_order_file = f"{username}_order_history.txt"
+    driver_deliveries_file = "driver_deliveries.txt"
+
+    # Read user orders
     try:
         with open(user_order_file, "r") as file:
             orders = file.readlines()
@@ -113,9 +116,27 @@ def check_order(username):
         print("No orders found.")
         return
 
+    # Read driver deliveries
+    delivery_status = {}
+    try:
+        with open(driver_deliveries_file, "r") as file:
+            for line in file:
+                parts = line.strip().split(", ")
+                order_info = {}
+                for part in parts:
+                    if ": " in part:
+                        key, value = part.split(": ", 1)
+                        order_info[key.strip()] = value.strip()
+                user = order_info.get("User", "")
+                status = order_info.get("Status", "Unknown")
+                delivery_status[user] = status
+    except FileNotFoundError:
+        print("Delivery status file not found. Delivery status will not be shown.")
+
+    # Display orders with delivery status
     print("\nYour Order History:")
-    print(f"{'Order Number':<15} {'Payment Status':<15} {'Consignment Size':<20} {'Vehicle Type':<15} {'Package Type':<20} {'Address':<65} {'Order Time':<20}")
-    print("=" * 170)
+    print(f"{'Order Number':<15} {'Payment Status':<15} {'Consignment Size':<20} {'Vehicle Type':<15} {'Package Type':<20} {'Address':<65} {'Order Time':<20} {'Delivery Status':<15}")
+    print("=" * 195)
 
     for order in orders:
         parts = order.strip().split(" | ")
@@ -135,8 +156,10 @@ def check_order(username):
         address = ",".join(details[3:-1])
         order_time = details[4].split(". Order number:")[0]
         order_number = details[-1].split(": ")[-1]
+        delivery_status_text = delivery_status.get(username, "Unknown")
 
-        print(f"{order_number:<15} {payment_status:<15} {consignment_size:<20} {vehicle_type:<15} {package_type:<20} {address:<65} {order_time:<20}")
+        print(f"{order_number:<15} {payment_status:<15} {consignment_size:<20} {vehicle_type:<15} {package_type:<20} {address:<65} {order_time:<20} {delivery_status_text:<15}")
+
     user_menu(username)
   
 
